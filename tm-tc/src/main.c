@@ -12,9 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-typedef unsigned char uint8_t;
-typedef unsigned short int uint16_t;
-typedef unsigned int uint32_t;
+#include "basic_types.h"
 int main() {
 
     int fd;
@@ -36,6 +34,7 @@ int main() {
     uint8_t DestinationID;
     uint32_t source_id;
     
+
 	uint16_t tm_packet_id = 0;
     uint16_t tm_packet_seq_ctrl;
     uint16_t tm_packet_len;
@@ -299,15 +298,33 @@ int main() {
 
 
     // Obtención de los campos de segundo nivel
-    printf("APID: 0x%X\n", (packet_id & 0x07FF));
-    printf("Sequence Flags: 0x%X\n", (packet_seq_ctrl >>14));
-    printf("Sequence Count: %d\n", (packet_seq_ctrl & 0x3FFF));
-    printf("ACK: 0x%X\n", ((df_header >>24) & 0x00F));
-    printf("Service Type: %d\n", ((df_header>>16) & 0x00FF));
-    printf("Service Subtype: %d\n", ((df_header>>8) & 0x0000FF));
-    printf("Source ID: 0x%X\n", (df_header & 0xFF));
 
+    //printf("APID: 0x%X\n", (packet_id & 0x07FF));
+    //printf("APID: 0x%X\n", ccsds_pus_tc_get_APID(packet_id));
 
+    //printf("Sequence Flags: 0x%X\n", (packet_seq_ctrl >>14));
+    //printf ("Sequence Flags: 0x%X\n", ccsds_pus_tc_get_Sequence_Flags(packet_seq_ctrl));
+
+    //printf("Sequence Count: %d\n", (packet_seq_ctrl & 0x3FFF));
+    //printf ("Sequence Count: %d\n", ccsds_pus_tc_get_Sequence_Count(packet_seq_ctrl));
+
+    //printf("ACK: 0x%X\n", ((df_header >>24) & 0x00F));
+    //printf ("ACK: 0x%X\n", ccsds_pus_tc_get_Ack(df_header));
+
+    //printf("Service Type: %d\n", ((df_header>>16) & 0x00FF));
+    //printf ("Service Type: %d\n", ccsds_pus_tc_get_Service_Type(df_header));
+
+    //printf("Service Subtype: %d\n", ((df_header>>8) & 0x0000FF));
+    //printf ("Service Subtype: %d\n", ccsds_pus_tc_get_Service_Subtype(df_header));
+
+    //printf("Source ID: 0x%X\n", (df_header & 0xFF));
+    //printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
+
+    ccsds_pus_tmtc_print_packet_id(packet_id);
+
+    ccsds_pus_tmtc_print_packet_sequence_control(packet_seq_ctrl);
+
+    ccsds_pus_tmtc_print_df_header(df_header);
 
   //FIN DE LA PARTE 1
 
