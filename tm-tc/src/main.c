@@ -35,6 +35,9 @@ int main() {
     uint32_t source_id;
     
 
+
+
+
 	uint16_t tm_packet_id = 0;
     uint16_t tm_packet_seq_ctrl;
     uint16_t tm_packet_len;
@@ -50,12 +53,16 @@ int main() {
     /* Read Packet ID and store it into packet_id */
 
     uint8_t ntcs;
-    read(fd, &read_byte, 1);
+    /*read(fd, &read_byte, 1);*/
     ntcs = read_byte;
     uint16_t tm_count = 0;
     uint8_t tc = 0;
 
-    while (tc < ntcs) {
+
+
+
+
+  /*while(tc < ntcs) {/
        uint16_t nbytes=0;
 	   read(fd, &read_byte, 1);        // Read MSB
 	       tc_bytes[0] = read_byte;
@@ -292,7 +299,7 @@ int main() {
 
 	        tm_count = tm_count + 1;
 	        tc=tc + 1;
-    }
+    }*/
 
 
 
@@ -320,12 +327,40 @@ int main() {
     //printf("Source ID: 0x%X\n", (df_header & 0xFF));
     //printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
 
+    for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
+
+        uint16_t packet_id;
+        uint16_t packet_seq_ctrl;
+        uint16_t packet_len;
+        uint32_t df_header;
+        uint16_t packet_err_ctrl;
+
+        uint16_t crc_value;
+        uint8_t nbytes = 0;
+
+        uint8_t tc_bytes[256];
+
+        // Read telecommand from file
+        nbytes = ccsds_pus_tc_read(tcs_fd, tc_bytes);
+
+        // Deserialize primary fields
+        ccsds_pus_tc_get_fields(tc_bytes, &packet_id,
+                &packet_seq_ctrl,
+                &packet_len,
+                &df_header,
+                &packet_err_ctrl);
+    // Print the contents of all the fields
     ccsds_pus_tmtc_print_packet_id(packet_id);
 
     ccsds_pus_tmtc_print_packet_sequence_control(packet_seq_ctrl);
 
     ccsds_pus_tmtc_print_df_header(df_header);
 
+    // Calculate CRC
+        // We need to calculate the CRC with nbytes - 2, since the vector
+        // ALSO STORES the Packet Error Control field
+        crc_value = cal_crc_16(tc_bytes, nbytes - 2);
+    }
   //FIN DE LA PARTE 1
 
 
