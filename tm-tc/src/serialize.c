@@ -29,3 +29,19 @@ uint32_t deserialize_uint32(uint8_t data_bytes[]) {
 
 
 }
+
+void serialize_uint16(uint16_t var, uint8_t data_bytes[]) {
+
+    data_bytes[0] = (var & 0xFF00) >> 8;
+    data_bytes[1] = (var & 0x00FF);
+
+}
+
+void serialize_uint32(uint32_t var, uint8_t data_bytes[]) {
+
+    data_bytes[0] = (var) >> 24;
+    data_bytes[1] = (var & 0xFF0000) >> 16;
+    data_bytes[2] = (var & 0xFF00) >> 8;
+    data_bytes[3] = (var & 0x00FF);
+
+}

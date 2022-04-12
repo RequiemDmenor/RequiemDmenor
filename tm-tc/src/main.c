@@ -8,15 +8,12 @@
 
 //PARTE 1
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
 
-#include "basic_types.h"
-int main() {
+/*
 
     int fd;
     int tms_fd;
+    int fdr;
     int tcs_fd;
     uint8_t read_byte;
     uint8_t byte_to_write;
@@ -26,13 +23,13 @@ int main() {
 
 
 
-    uint16_t packet_id;
-    uint16_t packet_seq_ctrl;
-    uint16_t packet_len;
-    uint32_t df_header;
-    uint16_t packet_err_ctrl;
-    uint8_t DestinationID;
-    uint32_t source_id;
+    /*uint16_t packet_id;*/
+    /*uint16_t packet_seq_ctrl;*/
+    /*uint16_t packet_len;*/
+    /*uint32_t df_header;*/
+    /*uint16_t packet_err_ctrl;*/
+    /*uint8_t DestinationID;
+    uint32_t source_id;*/
     
 
 
@@ -44,20 +41,20 @@ int main() {
     uint32_t tm_df_header;
     uint32_t tm_source_data;
     uint8_t tm_DestinationID;
-
+/*
     fd = open("multiple-tcs.bin", O_RDONLY);
     tms_fd = open("multiple-tms.bin", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
   //Campos principales del telecomando
 
     /* Read Packet ID and store it into packet_id */
-
+/*
     uint8_t ntcs;
-    /*read(fd, &read_byte, 1);*/
+    read(fd, &read_byte, 1);
     ntcs = read_byte;
     uint16_t tm_count = 0;
     uint8_t tc = 0;
-
+*/
 
 
 
@@ -327,24 +324,40 @@ int main() {
     //printf("Source ID: 0x%X\n", (df_header & 0xFF));
     //printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
 
+//PRACTICA 3 PARTE 2//
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include "basic_types.h"
+#include "ccsds_pus_format.h"
+#include "ccsds_pus_stdio.h"
+#include "crc.h"
+#include "serialize.h"
+
+int main() {
+    int fd;
+    int fdr;
+    uint8_t write_byte, tc_bytes[256], ntcs=0, tmc=0;
+    uint16_t packet_id, packet_seq_ctrl, packet_len, packet_err_ctrl, Rpacket_id, Rpacket_seq_control, Rpacket_len, i=0, crc_value=0xFFFF;
+    uint32_t df_header, Rdf_header, Rsource_data;
+
+    fd = open("multiple-tcs.bin", O_RDONLY);
+    fdr = open("multiple-tms.bin", O_WRONLY | O_CREAT | O_TRUNC, 0664);
+
+    read(fd, &tc_bytes[0], 1);
+    ntcs=tc_bytes[0];
+
+    //leer telecomando
     for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
-
-        uint16_t packet_id;
-        uint16_t packet_seq_ctrl;
-        uint16_t packet_len;
-        uint32_t df_header;
-        uint16_t packet_err_ctrl;
-
-        uint16_t crc_value;
+        printf("x/n");
         uint8_t nbytes = 0;
-
-        uint8_t tc_bytes[256];
-
         // Read telecommand from file
-        nbytes = ccsds_pus_tc_read(tcs_fd, tc_bytes);
+        nbytes = ccsds_pus_tc_read(fd, tc_bytes);
 
         // Deserialize primary fields
-        ccsds_pus_tc_get_fields(tc_bytes, &packet_id,
+        ccsds_pus_tc_get_fields(tc_bytes,
+        		&packet_id,
                 &packet_seq_ctrl,
                 &packet_len,
                 &df_header,
@@ -360,32 +373,110 @@ int main() {
         // We need to calculate the CRC with nbytes - 2, since the vector
         // ALSO STORES the Packet Error Control field
         crc_value = cal_crc_16(tc_bytes, nbytes - 2);
+     if(crc_value == packet_err_ctrl){
+    	 printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: OK\n",packet_err_ctrl,crc_value);
+     }else{
+    	 printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: FAIL\n",packet_err_ctrl,crc_value);
+     }
+
+     //generar telemetría de respuesta
+     Rpacket_id=packet_id & 0x0FFF;
+     Rpacket_seq_control=(packet_seq_ctrl & 0xC000) | tmc;
+     if(crc_value == packet_err_ctrl){
+    	 Rdf_header= 0x10010100 | (df_header & 0x000000FF);
+    	 Rsource_data= packet_id<<16 | packet_seq_ctrl;
+     }else{
+    	 Rdf_header= 0x10010200 | (df_header & 0x000000FF);
+    	 Rsource_data= packet_id<<64 | packet_seq_ctrl<<48 | 0002<<32 | packet_err_ctrl<<16 | crc_value;
+     }
+     Rpacket_len=0x04 + sizeof(Rsource_data) - 0x01;
+
+     write_byte=Rpacket_id>>8;
+     write(fdr, &write_byte, 1);
+
+     write_byte=Rpacket_id & 0x00FF;
+     write(fdr, &write_byte, 1);
+
+     write_byte=Rpacket_seq_control>>8;
+     write(fdr, &write_byte, 1);
+
+     write_byte=Rpacket_seq_control & 0x00FF;
+     write(fdr, &write_byte, 1);
+
+     write_byte=Rpacket_len>>8;
+     write(fdr, &write_byte, 1);
+
+     write_byte=Rpacket_len & 0x00FF;
+     write(fdr, &write_byte, 1);
+
+     write_byte=(Rdf_header>>24);
+     write(fdr, &write_byte, 1);
+
+     write_byte=(Rdf_header>>16) & 0x00FF;
+     write(fdr, &write_byte, 1);
+
+     write_byte=(Rdf_header>>8) & 0x0000FF;
+     write(fdr, &write_byte, 1);
+
+     write_byte=Rdf_header & 0x000000FF;
+     write(fdr, &write_byte, 1);
+
+     if(crc_value == packet_err_ctrl){
+    	 write_byte = (packet_id>>8);
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte = packet_id & 0x00FF;
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte = (packet_seq_ctrl>>8);
+    	 write(fdr, &write_byte, 1);
+
+         write_byte = packet_seq_ctrl & 0x00FF;
+         write(fdr, &write_byte, 1);
+     }else{
+    	 write_byte=(packet_id>>8);
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=packet_id & 0x00FF;
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=(packet_seq_ctrl>>8);
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=packet_seq_ctrl & 0x00FF;
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte= 00;
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=02;
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=(packet_err_ctrl>>8);
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=packet_err_ctrl& 0x00FF;
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=(crc_value>>8);
+    	 write(fdr, &write_byte, 1);
+
+    	 write_byte=crc_value& 0x00FF;
+    	 write(fdr, &write_byte, 1);
+     }
+
+     i=0;
+     tmc=tmc+1;
+     for (uint8_t j=0; j< nbytes; j++ ) {
+    	 tc_bytes[j]=0;
+     }
+     nbytes=0;
+     crc_value=0xFFFF;
     }
-  //FIN DE LA PARTE 1
-
-
-
-
-
-
- //PARTE 2 - Telemetría de aceptación (EL F2 ES DE ESTA PARTE)
-
-
-
-
-
-
-
-   //FIN DE LA PARTE 2
 
    close(fd);
-   close(tms_fd);
-
-
-
-
-
-    return 0;
+   close(fdr);
+   return 0;
 
 }
 

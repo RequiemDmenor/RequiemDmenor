@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #include "basic_types.h"
 #include "ccsds_pus_stdio.h"
 #include "ccsds_pus_format.h"
@@ -50,23 +49,16 @@ uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]) {
     read(fd, &tc_bytes[6], 4);
     df_header = deserialize_uint32(&tc_bytes[0]);
 
-    while(i<(packet_len-5)){
-    	if(i==0){
-    		read(fd, &tc_bytes[10], 1);
-    		App_Data=tc_bytes[10];
-    		i=i+1;
-    	}
-    	else{
-    		read(fd, &tc_bytes[10+i], 1);
-    		App_Data=App_Data | tc_bytes[10+i];
-    		i=i+1;
-    	}
-    }
-    read(fd, &tc_bytes[11+i], 2);
-    packet_err_ctrl=deserialize_uint16(&tc_bytes[11+i]);
-    // TODO: Read the remaining bytes and return the proper number of
+
+    read(fd, &tc_bytes[10+(packet_len-5)], 2);
+    packet_err_ctrl=deserialize_uint16(&tc_bytes[10+(packet_len-5)]);
+    // Read the remaining bytes and return the proper number of
     // bytes read. THE FUNCTION SHALL ALSO READ THE PACKET ERROR CONTROL
     // and store it into the vector.
 
+    nbytes=6 + packet_len;
+    return nbytes;
+
 }
+
 
