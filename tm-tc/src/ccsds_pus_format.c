@@ -2,7 +2,7 @@
 #include "ccsds_pus_format.h"
 #include "serialize.h"
 
-uint16_t ccsds_pus_tc_get_APID(uint16_t packet_id) {
+/*uint16_t ccsds_pus_tc_get_APID(uint16_t packet_id) {
 
     return (packet_id & 0x07FF);
 
@@ -43,12 +43,14 @@ uint8_t ccsds_pus_tc_get_Source_ID(uint32_t df_header) {
     return (df_header & 0x000000FF);
 
 }
-
+*/
 uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]){
 	uint16_t nbytes=0;
-	uint16_t packet_id=0, packet_seq_ctrl=0, packet_len=0, packet_err_ctrl=0, i=0, p_packet_id=0, p_packet_seq_ctrl=0, p_packet_len=0, p_packet_err_ctrl=0;
-	uint32_t df_header=0, App_Data=0, p_df_header=0;
+	/*uint16_t packet_id=0, packet_seq_ctrl=0, packet_len=0, packet_err_ctrl=0, i=0, p_packet_id=0, p_packet_seq_ctrl=0, p_packet_len=0, p_packet_err_ctrl=0;*/
+	uint16_t packet_len=0, i=0;
+	/*uint32_t df_header=0, App_Data=0, p_df_header=0;*/
 	read(fd, &tc_bytes[0], 6);
+
 	packet_len = deserialize_uint16(&tc_bytes[4]);
 	read(fd, &tc_bytes[6], 4);
 	while(i<(packet_len-5)){
@@ -81,7 +83,7 @@ void ccsds_pus_tc_get_fields(uint8_t tc_bytes[],
 	i=(*p_packet_len-5);
 	* p_packet_err_ctrl= deserialize_uint16(&tc_bytes[11+i]);
 }
-
+/*
 uint16_t ccsds_pus_tm_build_packet_id(uint16_t apid) {
 
 	uint16_t tm_packet_id;
@@ -107,7 +109,7 @@ uint32_t ccsds_pus_tm_build_df_header(uint8_t service_type, uint8_t service_subt
     tm_df_header = 0x10000000 | service_type << 16 | service_subtype <<8 | destination_id;
 	return tm_df_header;
 }
-
+*/
 
 void ccsds_pus_tm_set_fields(uint8_t tm_bytes[],
                              uint16_t tm_packet_id,

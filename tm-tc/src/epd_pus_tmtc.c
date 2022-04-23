@@ -17,11 +17,11 @@ void epd_pus_build_tm_1_1(uint8_t tm_bytes[],
 
     packet_id = ccsds_pus_tm_build_packet_id(EPD_APID);
 
-    packet_seq_ctrl = ccsds_pus_tm_build_packet_seq_ctrl(0x3, tm_seq_counter);
+    packet_seq_ctrl = ccsds_pus_tm_build_sequence_control(0x3, tm_seq_counter);
 
     packet_length = 0x07;
 
-    df_header = ccsds_pus_tm_build_df_header(1, 1, EPD_DESTINATION_ID, crc, packet_err_ctrl);
+    df_header = ccsds_pus_tm_build_df_header(01);
 
 
     ccsds_pus_tm_set_fields(&tm_bytes[0], packet_id,
@@ -47,11 +47,11 @@ void epd_pus_build_tm_1_2_crc_error(uint8_t tm_bytes[],
 
 	    packet_id = ccsds_pus_tm_build_packet_id(EPD_APID);
 
-	    packet_seq_ctrl = ccsds_pus_tm_build_packet_seq_ctrl(0x3, tm_seq_counter);
+	    packet_seq_ctrl = ccsds_pus_tm_build_sequence_control(0x3, tm_seq_counter);
 
-	    packet_length = 0x07;
+	    packet_length = 0x0D;
 
-	    df_header = ccsds_pus_tm_build_df_header(1, 1, EPD_DESTINATION_ID, calculated_crc, tc_packet_err_ctrl);
+	    df_header = ccsds_pus_tm_build_df_header(02);
 
 	    ccsds_pus_tm_set_fields(&tm_bytes[0], packet_id,
 	                            packet_seq_ctrl, packet_length, df_header);
