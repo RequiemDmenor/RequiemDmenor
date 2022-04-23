@@ -23,7 +23,10 @@ void ccsds_pus_tmtc_print_df_header(uint32_t df_header) {
 	printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
 }
 
-uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]) {
+void ccsds_pus_tm_write(int fd, uint8_t tm_bytes[], uint8_t x) {
+    write(fd, tm_bytes, x);
+}
+/*uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]) {
 
     uint16_t nbytes = 0;
     uint16_t i = 0;
@@ -57,8 +60,8 @@ uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]) {
     // and store it into the vector.
 
     nbytes=6 + packet_len;
-    return nbytes;
+    return nbytes;*/
 
-}
+
 
 

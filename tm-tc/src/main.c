@@ -35,12 +35,12 @@
 
 
 
-	uint16_t tm_packet_id = 0;
+	/*uint16_t tm_packet_id = 0;
     uint16_t tm_packet_seq_ctrl;
     uint16_t tm_packet_len;
     uint32_t tm_df_header;
     uint32_t tm_source_data;
-    uint8_t tm_DestinationID;
+    uint8_t tm_DestinationID;*/
 /*
     fd = open("multiple-tcs.bin", O_RDONLY);
     tms_fd = open("multiple-tms.bin", O_WRONLY | O_CREAT | O_TRUNC, 0664);
@@ -334,11 +334,13 @@
 #include "ccsds_pus_stdio.h"
 #include "crc.h"
 #include "serialize.h"
+#include "epd_pus_tmtc.h"
+#include "epd_pus_mission.h"
 
 int main() {
     int fd;
     int fdr;
-    uint8_t write_byte, tc_bytes[256], ntcs=0, tmc=0;
+    uint8_t write_byte, tc_bytes[256], ntcs=0, tmc=0, tm_bytes[256];
     uint16_t packet_id, packet_seq_ctrl, packet_len, packet_err_ctrl, Rpacket_id, Rpacket_seq_control, Rpacket_len, i=0, crc_value=0xFFFF;
     uint32_t df_header, Rdf_header, Rsource_data;
 
@@ -348,8 +350,82 @@ int main() {
     read(fd, &tc_bytes[0], 1);
     ntcs=tc_bytes[0];
 
-    //leer telecomando
     for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
+        printf("x\n");
+
+        uint8_t nbytes=0;
+
+        /*uint16_t tc_packet_id;
+        uint16_t tc_packet_seq_ctrl;
+        uint16_t tc_packet_len;
+        uint32_t tc_df_header;
+        uint16_t tc_packet_err_ctrl;
+
+        uint16_t crc_value;
+        uint8_t nbytes = 0;
+
+        uint8_t tc_bytes[256];
+        uint8_t tm_bytes[256];*/
+
+        // Read telecommand from file
+        nbytes = ccsds_pus_tc_read(fd, tc_bytes);
+
+        // Deserialize primary fields
+        ccsds_pus_tc_get_fields(tc_bytes, &packet_id,
+                &packet_seq_ctrl,
+                &packet_len,
+                &df_header,
+                &packet_err_ctrl);
+
+        // Print the contents of all the fields
+        ccsds_pus_tmtc_print_packet_id(packet_id);
+        ccsds_pus_tmtc_print_packet_sequence_control(packet_seq_ctrl);
+        ccsds_pus_tmtc_print_df_header(df_header);
+
+        // Calculate CRC
+        // We need to calculate the CRC with nbytes - 2, since the vector
+        // ALSO STORES the Packet Error Control field
+        crc_value = cal_crc_16(tc_bytes, nbytes - 2);
+
+        if (crc_value == packet_err_ctrl) {
+
+            printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: OK\n",
+                   packet_err_ctrl, crc_value);
+
+            // Generate TM (1,1) - Accept
+            epd_pus_build_tm_1_1(tm_bytes, tmc,
+                                 packet_id, packet_seq_ctrl,
+								 crc_value, packet_err_ctrl);
+            i=14;
+        } else {
+            printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: FAIL\n",
+                   packet_err_ctrl, crc_value);
+
+            epd_pus_build_tm_1_2_crc_error(tm_bytes, tmc,
+                                           packet_id, packet_seq_ctrl,
+                                           packet_err_ctrl, crc_value);
+            i=20;
+        }
+
+        ccsds_pus_tm_write(fd, tm_bytes, i);
+
+        tmc = tmc + 1;
+
+        i=0;
+             tmc=tmc+1;
+             for (uint8_t j=0; j< nbytes; j++ ) {
+            	 tc_bytes[j]=0;
+             }
+             for (uint8_t j=0; j< nbytes; j++){
+            	 tm_bytes[j]=0;
+             }
+             nbytes=0;
+             crc_value=0xFFFF;
+
+    }
+
+    //leer telecomando
+    /*for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
         printf("x/n");
         uint8_t nbytes = 0;
         // Read telecommand from file
@@ -375,12 +451,13 @@ int main() {
         crc_value = cal_crc_16(tc_bytes, nbytes - 2);
      if(crc_value == packet_err_ctrl){
     	 printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: OK\n",packet_err_ctrl,crc_value);
+
      }else{
     	 printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: FAIL\n",packet_err_ctrl,crc_value);
      }
 
      //generar telemetría de respuesta
-     Rpacket_id=packet_id & 0x0FFF;
+   /*  Rpacket_id=packet_id & 0x0FFF;
      Rpacket_seq_control=(packet_seq_ctrl & 0xC000) | tmc;
      if(crc_value == packet_err_ctrl){
     	 Rdf_header= 0x10010100 | (df_header & 0x000000FF);
@@ -463,20 +540,15 @@ int main() {
 
     	 write_byte=crc_value& 0x00FF;
     	 write(fdr, &write_byte, 1);
-     }
+     }*/
 
-     i=0;
-     tmc=tmc+1;
-     for (uint8_t j=0; j< nbytes; j++ ) {
-    	 tc_bytes[j]=0;
-     }
-     nbytes=0;
-     crc_value=0xFFFF;
+
+
+     close(fd);
+     close(fdr);
+     return 0;
+
     }
 
-   close(fd);
-   close(fdr);
-   return 0;
 
-}
 

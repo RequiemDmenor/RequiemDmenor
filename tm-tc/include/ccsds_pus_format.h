@@ -57,7 +57,7 @@ uint16_t ccsds_pus_tm_build_packet_id(uint16_t apid);
  *
  * \return the Packet Sequence Control field
  */
-uint16_t ccsds_pus_tm_build_packet_id(uint16_t apid);
+uint16_t ccsds_pus_tm_build_packet_seq_ctrl(uint8_t sequence_flags, uint16_t sequence_count);
 
 /**
  * \brief Builds the Data Field Header of a telmetry.
@@ -68,7 +68,15 @@ uint16_t ccsds_pus_tm_build_packet_id(uint16_t apid);
  *
  * \return the Data Field Header
  */
-// TODO: Declare function ccsds_pus_tm_build_df_header
+uint32_t ccsds_pus_tm_build_df_header(uint8_t service_type, uint8_t service_subtype, uint8_t destination_id, uint16_t crc, uint16_t packet_err_ctrl);
+
+void ccsds_pus_tm_set_fields(uint8_t tm_bytes[],
+                             uint16_t tm_packet_id,
+                             uint16_t tm_packet_seq_ctrl,
+                             uint16_t tm_packet_length,
+                             uint32_t tm_df_header);
+
+
 
 #endif  INCLUDE_CCSDS_PUS_FORMAT_H_
 
