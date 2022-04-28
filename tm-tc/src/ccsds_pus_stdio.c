@@ -15,13 +15,13 @@ void ccsds_pus_tmtc_print_packet_sequence_control(uint16_t packet_seq_ctrl) {
 	printf ("Sequence Count: %d\n", ccsds_pus_tc_get_Sequence_Count(packet_seq_ctrl));
 }
 
-void ccsds_pus_tmtc_print_df_header(uint32_t df_header) {
+/*void ccsds_pus_tmtc_print_df_header(uint32_t df_header) {
 
 	printf ("ACK: 0x%X\n", ccsds_pus_tc_get_Ack(df_header));
 	printf ("Service Type: %d\n", ccsds_pus_tc_get_Service_Type(df_header));
 	printf ("Service Subtype: %d\n", ccsds_pus_tc_get_Service_Subtype(df_header));
 	printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
-}
+}*/
 
 void ccsds_pus_tm_write(int fd, uint8_t tm_bytes[], uint8_t x) {
     write(fd, tm_bytes, x);
@@ -63,5 +63,12 @@ void ccsds_pus_tm_write(int fd, uint8_t tm_bytes[], uint8_t x) {
     return nbytes;*/
 
 
+void ccsds_pus_tc_print_df_header_fields(struct ccds_pus_tc_df_header tc_df_header) {
 
+    printf("ACK: 0x%X\n", ccsds_pus_tc_get_ack(tc_df_header.flag_ver_ack));
+    printf("Service Type: %d\n", tc_df_header.tc_type);
+    printf("Service Subtype: %d\n", tc_df_header.tc_subtype);
+    printf("Source ID: 0x%X\n", tc_df_header.sourceID);
+
+}
 

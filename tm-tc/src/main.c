@@ -341,7 +341,7 @@ int main() {
     int fd;
     int fdr;
     uint8_t write_byte, tc_bytes[256], ntcs=0, tmc=0, tm_bytes[256];
-    uint16_t packet_id, packet_seq_ctrl, packet_len, packet_err_ctrl, Rpacket_id, Rpacket_seq_control, Rpacket_len, i=0, crc_value=0xFFFF;
+    uint16_t packet_id, packet_seq_ctrl, packet_len, packet_err_ctrl, Rpacket_id, Rpacket_seq_control, Rpacket_len, i=0, crc_value = 0xFFFF;
     uint32_t df_header, Rdf_header, Rsource_data;
 
     fd = open("multiple-tcs.bin", O_RDONLY);
@@ -352,6 +352,9 @@ int main() {
 
     for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
         printf("x\n");
+
+        struct ccds_pus_tmtc_packet_header tc_packet_header;
+        struct ccds_pus_tc_df_header tc_df_header;
 
         uint8_t nbytes=0;
 
@@ -371,21 +374,21 @@ int main() {
         nbytes = ccsds_pus_tc_read(fd, tc_bytes);
 
         // Deserialize primary fields
-        ccsds_pus_tc_get_fields(tc_bytes, &packet_id,
-                &packet_seq_ctrl,
-                &packet_len,
-                &df_header,
+        ccsds_pus_tc_get_fields(tc_bytes, &tc_packet_header,
+                &tc_df_header,
                 &packet_err_ctrl);
 
         // Print the contents of all the fields
-        ccsds_pus_tmtc_print_packet_id(packet_id);
-        ccsds_pus_tmtc_print_packet_sequence_control(packet_seq_ctrl);
-        ccsds_pus_tmtc_print_df_header(df_header);
+        ccsds_pus_tmtc_print_packet_id(tc_packet_header.packet_id);
+        ccsds_pus_tmtc_print_packet_sequence_control(
+                    tc_packet_header.packet_seq_ctrl);
+        ccsds_pus_tc_print_df_header_fields(tc_df_header);
+
 
         // Calculate CRC
         // We need to calculate the CRC with nbytes - 2, since the vector
         // ALSO STORES the Packet Error Control field
-        crc_value = cal_crc_16(tc_bytes, nbytes - 2);
+        crc_value = cal_crc_16(tc_bytes, nbytes -2);
 
         if (crc_value == packet_err_ctrl) {
 
@@ -394,16 +397,17 @@ int main() {
 
             // Generate TM (1,1) - Accept
             epd_pus_build_tm_1_1(tm_bytes, tmc,
-                                 packet_id, packet_seq_ctrl,
-								 crc_value, packet_err_ctrl);
+                    tc_packet_header.packet_id,
+                    tc_packet_header.packet_seq_ctrl);
             i=14;
         } else {
             printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: FAIL\n",
                    packet_err_ctrl, crc_value);
 
             epd_pus_build_tm_1_2_crc_error(tm_bytes, tmc,
-                                           packet_id, packet_seq_ctrl,
-                                           packet_err_ctrl, crc_value);
+                    tc_packet_header.packet_id,
+                    tc_packet_header.packet_seq_ctrl,
+                    packet_err_ctrl, crc_value);
             i=20;
         }
 

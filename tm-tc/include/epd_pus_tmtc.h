@@ -11,11 +11,9 @@
  *                           telecommand
  */
 void epd_pus_build_tm_1_1(uint8_t tm_bytes[],
-                          uint16_t tm_seq_counter,
-                          uint16_t tc_packet_id,
-                          uint16_t tc_packet_seq_ctrl,
-						  uint16_t crc,
-						  uint16_t packet_err_ctrl);
+        uint16_t tm_seq_counter,
+        uint16_t tc_packet_id,
+        uint16_t tc_packet_seq_ctrl);
 
 /**
  * \brief Generates a Telemetry Packet (1,2) - Reject

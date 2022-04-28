@@ -67,7 +67,7 @@ uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]){
 	nbytes=12+i;
 	return(nbytes);
 }
-void ccsds_pus_tc_get_fields(uint8_t tc_bytes[],
+/*void ccsds_pus_tc_get_fields(uint8_t tc_bytes[],
                              uint16_t * p_packet_id,
                              uint16_t * p_packet_seq_ctrl,
                              uint16_t * p_packet_len,
@@ -82,7 +82,7 @@ void ccsds_pus_tc_get_fields(uint8_t tc_bytes[],
 	* p_df_header= deserialize_uint32(&tc_bytes[6]);
 	i=(*p_packet_len-5);
 	* p_packet_err_ctrl= deserialize_uint16(&tc_bytes[11+i]);
-}
+}*/
 /*
 uint16_t ccsds_pus_tm_build_packet_id(uint16_t apid) {
 
@@ -111,7 +111,7 @@ uint32_t ccsds_pus_tm_build_df_header(uint8_t service_type, uint8_t service_subt
 }
 */
 
-void ccsds_pus_tm_set_fields(uint8_t tm_bytes[],
+/*void ccsds_pus_tm_set_fields(uint8_t tm_bytes[],
                              uint16_t tm_packet_id,
                              uint16_t tm_packet_seq_ctrl,
                              uint16_t tm_packet_length,
@@ -122,10 +122,50 @@ void ccsds_pus_tm_set_fields(uint8_t tm_bytes[],
     serialize_uint16(tm_packet_length, &tm_bytes[4]);
     serialize_uint32(tm_df_header, &tm_bytes[6]);
 
+}*/
+
+void ccsds_pus_tc_get_fields(uint8_t tc_bytes[],
+        struct ccds_pus_tmtc_packet_header * p_tc_packet_header,
+        struct ccds_pus_tc_df_header * p_tc_df_header,
+        uint16_t * p_tc_packet_err_ctrl) {
+
+    // Deserialize Packet ID and store it into field packet_id
+    p_tc_packet_header->packet_id = deserialize_uint16(&tc_bytes[0]);
+
+    //Deserialize Packet Seq. Control and store it into field packet_seq_ctrl
+    p_tc_packet_header->packet_seq_ctrl = deserialize_uint16(&tc_bytes[2]);
+    //Deserialize Packet Length and store it into field packet_length
+    p_tc_packet_header->packet_len = deserialize_uint16(&tc_bytes[4]);
+    // Read the MSB of the Data Field Header and store it into flag_ver_ack
+    p_tc_df_header->flag_ver_ack = tc_bytes[6];
+    //Read the remaining fields of the Data Field Header into the struct
+    p_tc_df_header->tc_type = tc_bytes[7];
+    p_tc_df_header->tc_subtype = tc_bytes[8];
+    p_tc_df_header->sourceID = tc_bytes[9];
+    // Deserialize Packet Error Control and store it at p_tc_packet_err_ctrl
+    *p_tc_packet_err_ctrl = deserialize_uint16(
+        &tc_bytes[p_tc_packet_header->packet_len + 6]);
+
 }
 
+void ccsds_pus_tm_set_fields(uint8_t tm_bytes[],
+        const struct ccds_pus_tmtc_packet_header * p_tm_packet_header,
+        const struct ccds_pus_tm_df_header * p_tm_df_header) {
 
+    serialize_uint16(p_tm_packet_header->packet_id, &tm_bytes[0]);
 
+    //Serialize Packet Sequence Control from packet_seq_ctrl
+    serialize_uint16(p_tm_packet_header->packet_seq_ctrl, &tm_bytes[2]);
+    //Serialize Packet Length from packet_length
+    serialize_uint16(p_tm_packet_header->packet_len, &tm_bytes[4]);
+    // Store version field into the corresponding byte
+    tm_bytes[6] = p_tm_df_header->version;
+    tm_bytes[7] = p_tm_df_header->type;
+    tm_bytes[8] = p_tm_df_header->subtype;
+    tm_bytes[9] = p_tm_df_header->destinationID;
+    //Store the remaining fields into their respective locations
+
+}
 
 
 
