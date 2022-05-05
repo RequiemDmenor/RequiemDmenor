@@ -1,6 +1,7 @@
 #include "basic_types.h"
 #include "ccsds_pus_format.h"
 #include "serialize.h"
+#include "system_tm_queue.h"
 
 /*uint16_t ccsds_pus_tc_get_APID(uint16_t packet_id) {
 

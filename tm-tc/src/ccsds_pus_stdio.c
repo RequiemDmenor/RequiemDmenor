@@ -2,6 +2,7 @@
 #include "basic_types.h"
 #include "ccsds_pus_stdio.h"
 #include "ccsds_pus_format.h"
+#include "system_tm_queue.h"
 
 void ccsds_pus_tmtc_print_packet_id(uint16_t packet_id) {
 
@@ -23,9 +24,9 @@ void ccsds_pus_tmtc_print_packet_sequence_control(uint16_t packet_seq_ctrl) {
 	printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
 }*/
 
-void ccsds_pus_tm_write(int fd, uint8_t tm_bytes[], uint8_t x) {
+/*void ccsds_pus_tm_write(int fd, uint8_t tm_bytes[], uint8_t x) {
     write(fd, tm_bytes, x);
-}
+}*/
 /*uint16_t ccsds_pus_tc_read(int fd, uint8_t tc_bytes[]) {
 
     uint16_t nbytes = 0;
@@ -72,3 +73,11 @@ void ccsds_pus_tc_print_df_header_fields(struct ccds_pus_tc_df_header tc_df_head
 
 }
 
+void ccsds_pus_tm_write(int fd, tm_descriptor_t tm_descriptor) {
+
+    // Write the TM bytes into the file
+    write(fd, tm_descriptor.p_tm_bytes, tm_descriptor.tm_num_bytes);
+
+    return;
+
+}

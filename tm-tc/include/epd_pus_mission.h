@@ -10,4 +10,9 @@
  */
 #define EPD_DESTINATION_ID    0x78
 
+/**
+ * \brief Maximum number of elements of THE TM queue
+ */
+#define TM_QUEUE_MAX_NOE    20
+
 #endif /* INCLUDE__EPD_PUS_MISSION_H_ */

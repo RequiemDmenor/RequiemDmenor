@@ -336,6 +336,7 @@
 #include "serialize.h"
 #include "epd_pus_tmtc.h"
 #include "epd_pus_mission.h"
+#include "system_tm_queue.h"
 
 int main() {
     int fd;
