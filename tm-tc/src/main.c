@@ -24,18 +24,18 @@
 
 
     /*uint16_t packet_id;*/
-    /*uint16_t packet_seq_ctrl;*/
-    /*uint16_t packet_len;*/
-    /*uint32_t df_header;*/
-    /*uint16_t packet_err_ctrl;*/
-    /*uint8_t DestinationID;
+/*uint16_t packet_seq_ctrl;*/
+/*uint16_t packet_len;*/
+/*uint32_t df_header;*/
+/*uint16_t packet_err_ctrl;*/
+/*uint8_t DestinationID;
     uint32_t source_id;*/
-    
 
 
 
 
-	/*uint16_t tm_packet_id = 0;
+
+/*uint16_t tm_packet_id = 0;
     uint16_t tm_packet_seq_ctrl;
     uint16_t tm_packet_len;
     uint32_t tm_df_header;
@@ -54,12 +54,12 @@
     ntcs = read_byte;
     uint16_t tm_count = 0;
     uint8_t tc = 0;
-*/
+ */
 
 
 
 
-  /*while(tc < ntcs) {/
+/*while(tc < ntcs) {/
        uint16_t nbytes=0;
 	   read(fd, &read_byte, 1);        // Read MSB
 	       tc_bytes[0] = read_byte;
@@ -301,28 +301,28 @@
 
 
 
-    // Obtención de los campos de segundo nivel
+// Obtención de los campos de segundo nivel
 
-    //printf("APID: 0x%X\n", (packet_id & 0x07FF));
-    //printf("APID: 0x%X\n", ccsds_pus_tc_get_APID(packet_id));
+//printf("APID: 0x%X\n", (packet_id & 0x07FF));
+//printf("APID: 0x%X\n", ccsds_pus_tc_get_APID(packet_id));
 
-    //printf("Sequence Flags: 0x%X\n", (packet_seq_ctrl >>14));
-    //printf ("Sequence Flags: 0x%X\n", ccsds_pus_tc_get_Sequence_Flags(packet_seq_ctrl));
+//printf("Sequence Flags: 0x%X\n", (packet_seq_ctrl >>14));
+//printf ("Sequence Flags: 0x%X\n", ccsds_pus_tc_get_Sequence_Flags(packet_seq_ctrl));
 
-    //printf("Sequence Count: %d\n", (packet_seq_ctrl & 0x3FFF));
-    //printf ("Sequence Count: %d\n", ccsds_pus_tc_get_Sequence_Count(packet_seq_ctrl));
+//printf("Sequence Count: %d\n", (packet_seq_ctrl & 0x3FFF));
+//printf ("Sequence Count: %d\n", ccsds_pus_tc_get_Sequence_Count(packet_seq_ctrl));
 
-    //printf("ACK: 0x%X\n", ((df_header >>24) & 0x00F));
-    //printf ("ACK: 0x%X\n", ccsds_pus_tc_get_Ack(df_header));
+//printf("ACK: 0x%X\n", ((df_header >>24) & 0x00F));
+//printf ("ACK: 0x%X\n", ccsds_pus_tc_get_Ack(df_header));
 
-    //printf("Service Type: %d\n", ((df_header>>16) & 0x00FF));
-    //printf ("Service Type: %d\n", ccsds_pus_tc_get_Service_Type(df_header));
+//printf("Service Type: %d\n", ((df_header>>16) & 0x00FF));
+//printf ("Service Type: %d\n", ccsds_pus_tc_get_Service_Type(df_header));
 
-    //printf("Service Subtype: %d\n", ((df_header>>8) & 0x0000FF));
-    //printf ("Service Subtype: %d\n", ccsds_pus_tc_get_Service_Subtype(df_header));
+//printf("Service Subtype: %d\n", ((df_header>>8) & 0x0000FF));
+//printf ("Service Subtype: %d\n", ccsds_pus_tc_get_Service_Subtype(df_header));
 
-    //printf("Source ID: 0x%X\n", (df_header & 0xFF));
-    //printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
+//printf("Source ID: 0x%X\n", (df_header & 0xFF));
+//printf ("Source ID: 0x%X\n", ccsds_pus_tc_get_Source_ID(df_header));
 
 //PRACTICA 3 PARTE 2//
 
@@ -337,29 +337,35 @@
 #include "epd_pus_tmtc.h"
 #include "epd_pus_mission.h"
 #include "system_tm_queue.h"
+#include "system_tm_pool.h"
 
 int main() {
-    int fd;
-    int fdr;
-    uint8_t write_byte, tc_bytes[256], ntcs=0, tmc=0, tm_bytes[256];
-    uint16_t packet_id, packet_seq_ctrl, packet_len, packet_err_ctrl, Rpacket_id, Rpacket_seq_control, Rpacket_len, i=0, crc_value = 0xFFFF;
-    uint32_t df_header, Rdf_header, Rsource_data;
+	int fd;
+	int fdr;
+	uint8_t write_byte, tc_bytes[256], ntcs=0, tmc=0, tm_bytes[256];
+	uint16_t packet_id, packet_seq_ctrl, packet_len, packet_err_ctrl, Rpacket_id, Rpacket_seq_control, Rpacket_len, i=0, crc_value = 0xFFFF;
+	uint32_t df_header, Rdf_header, Rsource_data;
 
-    fd = open("multiple-tcs.bin", O_RDONLY);
-    fdr = open("multiple-tms.bin", O_WRONLY | O_CREAT | O_TRUNC, 0664);
+	fd = open("multiple-tcs.bin", O_RDONLY);
+	fdr = open("multiple-tms.bin", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
-    read(fd, &tc_bytes[0], 1);
-    ntcs=tc_bytes[0];
+	read(fd, &tc_bytes[0], 1);
+	ntcs=tc_bytes[0];
+	// Initialize TM queue
+	init_system_tm_queue();
 
-    for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
-        printf("x\n");
+	// Initialize TM pool
+	init_system_tm_pool();
 
-        struct ccds_pus_tmtc_packet_header tc_packet_header;
-        struct ccds_pus_tc_df_header tc_df_header;
+	for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
+		printf("x\n");
 
-        uint8_t nbytes=0;
+		struct ccds_pus_tmtc_packet_header tc_packet_header;
+		struct ccds_pus_tc_df_header tc_df_header;
 
-        /*uint16_t tc_packet_id;
+		uint8_t nbytes=0;
+
+		/*uint16_t tc_packet_id;
         uint16_t tc_packet_seq_ctrl;
         uint16_t tc_packet_len;
         uint32_t tc_df_header;
@@ -371,27 +377,26 @@ int main() {
         uint8_t tc_bytes[256];
         uint8_t tm_bytes[256];*/
 
-        // Read telecommand from file
-        nbytes = ccsds_pus_tc_read(fd, tc_bytes);
+		// Read telecommand from file
+		nbytes = ccsds_pus_tc_read(fd, tc_bytes);
 
-        // Deserialize primary fields
-        ccsds_pus_tc_get_fields(tc_bytes, &tc_packet_header,
-                &tc_df_header,
-                &packet_err_ctrl);
+		// Deserialize primary fields
+		ccsds_pus_tc_get_fields(tc_bytes, &tc_packet_header,
+				&tc_df_header,
+				&packet_err_ctrl);
 
-        // Print the contents of all the fields
-        ccsds_pus_tmtc_print_packet_id(tc_packet_header.packet_id);
-        ccsds_pus_tmtc_print_packet_sequence_control(
-                    tc_packet_header.packet_seq_ctrl);
-        ccsds_pus_tc_print_df_header_fields(tc_df_header);
+		// Print the contents of all the fields
+		ccsds_pus_tmtc_print_packet_id(tc_packet_header.packet_id);
+		ccsds_pus_tmtc_print_packet_sequence_control(tc_packet_header.packet_seq_ctrl);
+		ccsds_pus_tc_print_df_header_fields(tc_df_header);
 
 
-        // Calculate CRC
-        // We need to calculate the CRC with nbytes - 2, since the vector
-        // ALSO STORES the Packet Error Control field
-        crc_value = cal_crc_16(tc_bytes, nbytes -2);
+		// Calculate CRC
+		// We need to calculate the CRC with nbytes - 2, since the vector
+		// ALSO STORES the Packet Error Control field
+		crc_value = cal_crc_16(tc_bytes, nbytes -2);
 
-        if (crc_value == packet_err_ctrl) {
+		/*if (crc_value == packet_err_ctrl) {
 
             printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: OK\n",
                    packet_err_ctrl, crc_value);
@@ -410,27 +415,76 @@ int main() {
                     tc_packet_header.packet_seq_ctrl,
                     packet_err_ctrl, crc_value);
             i=20;
-        }
+        }*/
 
-        ccsds_pus_tm_write(fd, tm_bytes, i);
+		if (crc_value == packet_err_ctrl) {
 
-        tmc = tmc + 1;
+			uint8_t alloc_error;
+			tm_descriptor_t tm_descriptor;
 
-        i=0;
-             tmc=tmc+1;
-             for (uint8_t j=0; j< nbytes; j++ ) {
-            	 tc_bytes[j]=0;
-             }
-             for (uint8_t j=0; j< nbytes; j++){
-            	 tm_bytes[j]=0;
-             }
-             nbytes=0;
-             crc_value=0xFFFF;
+			printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: OK\n",
+					packet_err_ctrl, crc_value);
 
-    }
+			alloc_error = tm_pool_alloc_tm(&tm_descriptor);
 
-    //leer telecomando
-    /*for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
+			if(!alloc_error){
+
+				// Generate TM (1,1) - Accept
+				epd_pus_build_tm_1_1(&tm_descriptor, tmc,
+						tc_packet_header.packet_id,
+						tc_packet_header.packet_seq_ctrl);
+
+				tm_queue_insert_tm(tm_descriptor);
+
+			}
+
+		} else {
+			uint8_t alloc_error;
+			tm_descriptor_t tm_descriptor;
+
+			printf("Expected CRC value 0x%X, Calculated CRC value 0x%X: FAIL\n",
+					packet_err_ctrl, crc_value);
+
+			alloc_error = tm_pool_alloc_tm(&tm_descriptor);
+
+			if(!alloc_error){
+				epd_pus_build_tm_1_2_crc_error(&tm_descriptor, tmc,
+						tc_packet_header.packet_id,
+						tc_packet_header.packet_seq_ctrl,
+						packet_err_ctrl, crc_value);
+
+				tm_queue_insert_tm(tm_descriptor);
+
+			}
+
+
+
+		}
+
+
+			}
+
+
+	while(!tm_queue_is_empty()){
+			tm_descriptor_t tm_descriptor;
+
+			if(!tm_queue_extract_tm(&tm_descriptor)){
+		    ccsds_pus_tm_write(fdr, tm_descriptor);
+			tm_pool_free_tm(&tm_descriptor);
+
+		}
+
+
+}
+
+
+
+
+
+
+
+	//leer telecomando
+	/*for (uint8_t tc = 0; tc < ntcs; tc = tc + 1) {
         printf("x/n");
         uint8_t nbytes = 0;
         // Read telecommand from file
@@ -549,11 +603,11 @@ int main() {
 
 
 
-     close(fd);
-     close(fdr);
-     return 0;
+	close(fd);
+	close(fdr);
+	return 0;
 
-    }
+}
 
 
 
